@@ -6,6 +6,7 @@ CREATE SCHEMA IF NOT EXISTS dev;
 -- 枚举类型
 CREATE TYPE dev.provider_type AS ENUM (
     'openai',
+    'openai_chat',
     'gemini',
     'anthropic'
 );

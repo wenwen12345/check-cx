@@ -88,16 +88,17 @@ lib/
 ### 健康检查流程
 
 1. **Provider 检查**: `lib/providers/index.ts:runProviderChecks()` 并发执行所有启用配置的检查
-2. **流式响应**: 所有 provider 使用流式 API (`stream: true`),接收到首个响应块即视为成功
-3. **通用逻辑**: `lib/providers/stream-check.ts:runStreamCheck()` 提供流式检查的通用实现
+2. **流式响应**: 使用 Vercel AI SDK 的 `streamText` 进行流式请求,用于测量首 token 延迟
+3. **统一实现**: `lib/providers/ai-sdk-check.ts:checkWithAiSdk()` 负责构建模型实例与执行挑战校验
 4. **状态判定**:
    - `operational`: 请求成功且延迟 ≤ 6000ms
    - `degraded`: 请求成功但延迟 > 6000ms
    - `failed`: 请求失败或超时(默认超时 15 秒)
 5. **三类 Provider**:
-   - **OpenAI** (`lib/providers/openai.ts`): POST `/v1/chat/completions` 带 `stream: true`
-   - **Gemini** (`lib/providers/gemini.ts`): POST `/models/{model}:streamGenerateContent` 带 API key 查询参数
-   - **Anthropic** (`lib/providers/anthropic.ts`): POST `/v1/messages` 带 `stream: true` 和 `anthropic-version` 头
+   - **OpenAI (Responses)** (`type = openai`): `/v1/responses`
+   - **OpenAI (Chat Completions)** (`type = openai_chat`): `/v1/chat/completions`
+   - **Gemini** (`type = gemini`): 通过 OpenAI 兼容模式接入
+   - **Anthropic** (`type = anthropic`): `/v1/messages`
 
 ### 数据存储与历史
 
@@ -240,27 +241,27 @@ export async function check新Provider(
 -- 添加配置
 INSERT INTO check_configs (name, type, model, endpoint, api_key, enabled)
 VALUES ('主力 OpenAI', 'openai', 'gpt-4o-mini',
-        'https://api.openai.com/v1/chat/completions',
+        'https://api.openai.com/v1/responses',
         'sk-xxx', true);
 
 -- 添加配置并设置自定义请求头（JSON 格式）
 INSERT INTO check_configs (name, type, model, endpoint, api_key, enabled, request_header)
 VALUES ('自定义请求头配置', 'openai', 'gpt-4o-mini',
-        'https://api.example.com/v1/chat/completions',
+        'https://api.example.com/v1/responses',
         'sk-xxx', true,
         '{"User-Agent": "claude-cli/1.0.111 (external, cli)", "X-Custom-Header": "some-value"}');
 
 -- 添加配置并设置自定义请求参数（metadata）
 INSERT INTO check_configs (name, type, model, endpoint, api_key, enabled, metadata)
 VALUES ('自定义参数配置', 'openai', 'gpt-4o-mini',
-        'https://api.example.com/v1/chat/completions',
+        'https://api.example.com/v1/responses',
         'sk-xxx', true,
         '{"temperature": 0.5, "max_tokens": 50}');
 
 -- 同时设置请求头和 metadata
 INSERT INTO check_configs (name, type, model, endpoint, api_key, enabled, request_header, metadata)
 VALUES ('完整自定义配置', 'openai', 'gpt-4o-mini',
-        'https://api.example.com/v1/chat/completions',
+        'https://api.example.com/v1/responses',
         'sk-xxx', true,
         '{"User-Agent": "custom-agent/1.0", "X-Request-Id": "check-cx"}',
         '{"temperature": 0.7}');

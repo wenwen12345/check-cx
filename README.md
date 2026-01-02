@@ -172,7 +172,7 @@ Check CX 是一套基于 **Next.js 16** + **shadcn/ui** 构建的现代化 AI �
      'OpenAI GPT-4',
      'openai',
      'gpt-4o-mini',
-     'https://api.openai.com/v1/chat/completions',
+     'https://api.openai.com/v1/responses',
      'sk-your-api-key',
      true
    );
@@ -286,8 +286,22 @@ Check CX 使用 Supabase 的两张核心表:
 ```sql
 INSERT INTO check_configs (name, type, model, endpoint, api_key, enabled)
 VALUES (
-  '主力 OpenAI',
+  '主力 OpenAI (Responses)',
   'openai',
+  'gpt-4o-mini',
+  'https://api.openai.com/v1/responses',
+  'sk-your-openai-key',
+  true
+);
+```
+
+#### OpenAI Chat Completions
+
+```sql
+INSERT INTO check_configs (name, type, model, endpoint, api_key, enabled)
+VALUES (
+  '主力 OpenAI (Chat)',
+  'openai_chat',
   'gpt-4o-mini',
   'https://api.openai.com/v1/chat/completions',
   'sk-your-openai-key',
@@ -325,7 +339,7 @@ VALUES (
 
 ### 推理模型 Effort 指令
 
-对于支持 `reasoning_effort` 参数的推理模型(如 OpenAI o1、o3 系列),可以在 `model` 字段中附加 effort 级别:
+对于支持 `reasoning_effort` 参数的推理模型(如 OpenAI o1、o3 系列),可以在 `model` 字段中附加 effort 级别（仅 `openai` / Responses 渠道生效）:
 
 ```sql
 -- 使用 @ 或 # 分隔符指定 effort
@@ -334,7 +348,7 @@ VALUES (
   'OpenAI O1 高推理',
   'openai',
   'o1-preview@high',  -- 或 'o1-preview#high'
-  'https://api.openai.com/v1/chat/completions',
+  'https://api.openai.com/v1/responses',
   'sk-your-key',
   true
 );
@@ -369,7 +383,7 @@ WHERE id = 'your-config-uuid';
 
 -- 更新端点或模型
 UPDATE check_configs
-SET endpoint = 'https://new-endpoint.com/v1/chat/completions',
+SET endpoint = 'https://new-endpoint.com/v1/responses',
     model = 'gpt-4o'
 WHERE name = '主力 OpenAI';
 
@@ -390,10 +404,10 @@ DELETE FROM check_configs WHERE id = 'your-config-uuid';
 -- 添加配置到指定分组
 INSERT INTO check_configs (name, type, model, endpoint, api_key, group_name, enabled)
 VALUES (
-  '主力 OpenAI',
+  '主力 OpenAI (Responses)',
   'openai',
   'gpt-4o-mini',
-  'https://api.openai.com/v1/chat/completions',
+  'https://api.openai.com/v1/responses',
   'sk-your-key',
   '主力服务商',
   true
@@ -715,7 +729,7 @@ curl https://your-domain.com/api/v1/status?group=主力服务商&model=gpt-4o
       "type": "openai",
       "model": "gpt-4o-mini",
       "group": "主力服务商",
-      "endpoint": "https://api.openai.com/v1/chat/completions",
+      "endpoint": "https://api.openai.com/v1/responses",
       "latest": {
         "status": "operational",
         "latencyMs": 1234,

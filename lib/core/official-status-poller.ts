@@ -93,7 +93,7 @@ async function runOfficialStatusCheck(): Promise<void> {
     console.log("[官方状态] 开始检查官方服务状态...");
 
     // 获取所有需要检查的 Provider 类型
-    const allTypes: ProviderType[] = ["openai", "gemini", "anthropic"];
+    const allTypes: ProviderType[] = ["openai", "openai_chat", "gemini", "anthropic"];
 
     // 并发检查所有 Provider 的官方状态
     const results = await checkAllOfficialStatuses(allTypes);

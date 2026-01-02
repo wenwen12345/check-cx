@@ -2,7 +2,8 @@
  * 统一的 AI SDK 健康检查模块
  *
  * 使用 Vercel AI SDK 统一处理多种 AI Provider 的健康检查：
- * - OpenAI：支持 Chat Completions API (/v1/chat/completions) 和 Responses API (/v1/responses)
+ * - OpenAI Responses：/v1/responses
+ * - OpenAI Chat Completions：/v1/chat/completions
  * - Anthropic：Claude 系列模型
  * - Gemini：通过 OpenAI 兼容模式接入
  *
@@ -74,6 +75,12 @@ function isResponsesEndpoint(endpoint: string | null | undefined): boolean {
   if (!endpoint) return false;
   const [pathWithoutQuery] = endpoint.split("?");
   return /\/responses\/?$/.test(pathWithoutQuery);
+}
+
+function isChatCompletionsEndpoint(endpoint: string | null | undefined): boolean {
+  if (!endpoint) return false;
+  const [pathWithoutQuery] = endpoint.split("?");
+  return /\/chat\/completions\/?$/.test(pathWithoutQuery);
 }
 
 /* ============================================================================
@@ -230,7 +237,8 @@ function createCustomFetch(
  * 创建 AI SDK 模型实例
  *
  * 根据 Provider 类型创建对应的 SDK 实例：
- * - openai：使用 @ai-sdk/openai，支持 Chat Completions 和 Responses API
+ * - openai：使用 @ai-sdk/openai，仅支持 Responses API
+ * - openai_chat：使用 @ai-sdk/openai，仅支持 Chat Completions API
  * - anthropic：使用 @ai-sdk/anthropic
  * - gemini：使用 @ai-sdk/openai-compatible（OpenAI 兼容模式）
  *
@@ -251,21 +259,32 @@ function createModel(config: ProviderConfig) {
 
   switch (config.type) {
     case "openai": {
+      if (isChatCompletionsEndpoint(endpoint)) {
+        throw new Error(
+          "openai 渠道仅支持 /v1/responses；检测 Chat Completions 请改用 openai_chat"
+        );
+      }
       const provider = createOpenAI({ apiKey: config.apiKey, baseURL, fetch: customFetch });
-
-      // Responses API 使用 provider.responses()，Chat Completions 使用 provider()
-      const isResponses = isResponsesEndpoint(config.endpoint);
       return {
-        model: isResponses ? provider.responses(modelId) : provider(modelId),
+        model: provider.responses(modelId),
         reasoningEffort,
-        isResponses,
       };
+    }
+
+    case "openai_chat": {
+      if (isResponsesEndpoint(endpoint)) {
+        throw new Error(
+          "openai_chat 渠道仅支持 /v1/chat/completions；检测 Responses 请改用 openai"
+        );
+      }
+      const provider = createOpenAI({ apiKey: config.apiKey, baseURL, fetch: customFetch });
+      return { model: provider(modelId), reasoningEffort: undefined };
     }
 
     case "anthropic": {
       const provider = createAnthropic({ apiKey: config.apiKey, baseURL, fetch: customFetch });
       // Anthropic 不支持 reasoning_effort
-      return { model: provider(modelId), reasoningEffort: undefined, isResponses: false };
+      return { model: provider(modelId), reasoningEffort: undefined };
     }
 
     case "gemini": {
@@ -276,7 +295,7 @@ function createModel(config: ProviderConfig) {
         fetch: customFetch,
       });
       // Gemini 不支持 reasoning_effort
-      return { model: provider(modelId), reasoningEffort: undefined, isResponses: false };
+      return { model: provider(modelId), reasoningEffort: undefined };
     }
 
     default:

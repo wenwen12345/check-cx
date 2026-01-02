@@ -78,7 +78,8 @@ export const OFFICIAL_STATUS_META: Record<
 };
 
 export const PROVIDER_LABEL: Record<ProviderType, string> = {
-  openai: "OpenAI",
+  openai: "OpenAI (Responses)",
+  openai_chat: "OpenAI (Chat)",
   gemini: "Gemini",
   anthropic: "Anthropic",
 };

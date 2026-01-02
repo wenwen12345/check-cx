@@ -17,7 +17,7 @@ export async function checkOfficialStatus(
 ): Promise<OfficialStatusResult> {
   const checkedAt = new Date().toISOString();
 
-  switch (type) {
+  switch (type === "openai_chat" ? "openai" : type) {
     case "openai":
       return checkOpenAIStatus();
 
@@ -49,12 +49,30 @@ export async function checkOfficialStatus(
 export async function checkAllOfficialStatuses(
   types: ProviderType[]
 ): Promise<Map<ProviderType, OfficialStatusResult>> {
-  const results = await Promise.all(
-    types.map(async (type) => {
+  const canonicalTypes = Array.from(
+    new Set(types.map((type) => (type === "openai_chat" ? "openai" : type)))
+  );
+
+  const canonicalResults = await Promise.all(
+    canonicalTypes.map(async (type) => {
       const result = await checkOfficialStatus(type);
       return [type, result] as const;
     })
   );
 
-  return new Map(results);
+  const canonicalMap = new Map(canonicalResults);
+  return new Map(
+    types.map((type) => {
+      const canonicalType = type === "openai_chat" ? "openai" : type;
+      const canonical = canonicalMap.get(canonicalType);
+      return [
+        type,
+        canonical ?? {
+          status: "unknown",
+          message: "未配置官方状态检查",
+          checkedAt: new Date().toISOString(),
+        },
+      ] as const;
+    })
+  );
 }

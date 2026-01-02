@@ -10,6 +10,7 @@ const ICON_MAP: Record<
   React.ComponentType<{ className?: string; size?: number }>
 > = {
   openai: OpenAI,
+  openai_chat: OpenAI,
   gemini: Gemini,
   anthropic: Anthropic,
 };

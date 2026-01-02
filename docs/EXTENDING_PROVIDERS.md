@@ -11,10 +11,11 @@
 1. 修改 `lib/types/provider.ts`：
 
    ```ts
-   export type ProviderType = "openai" | "gemini" | "anthropic" | "myvendor";
+   export type ProviderType = "openai" | "openai_chat" | "gemini" | "anthropic" | "myvendor";
 
    export const DEFAULT_ENDPOINTS: Record<ProviderType, string> = {
-     openai: "https://api.openai.com/v1/chat/completions",
+     openai: "https://api.openai.com/v1/responses",
+     openai_chat: "https://api.openai.com/v1/chat/completions",
      gemini: "https://generativelanguage.googleapis.com",
      anthropic: "https://api.anthropic.com/v1/messages",
      myvendor: "https://api.myvendor.com/v1/chat/completions",
@@ -25,7 +26,8 @@
 
    ```ts
    export const PROVIDER_LABEL: Record<ProviderType, string> = {
-     openai: "OpenAI",
+     openai: "OpenAI (Responses)",
+     openai_chat: "OpenAI (Chat)",
      gemini: "Gemini",
      anthropic: "Anthropic",
      myvendor: "MyVendor",
@@ -40,11 +42,7 @@
 - 限制 `max_tokens` 或等效参数以降低成本
 - 请求体尽可能简洁（例如固定 prompt `"hi"`）
 
-可参考现有 Provider 实现：
-
-- OpenAI（官方 SDK + 流式接口）：`lib/providers/openai.ts`
-- Gemini（`fetch` + 通用流式检查）：`lib/providers/gemini.ts`
-- Anthropic（官方 SDK + 流式接口）：`lib/providers/anthropic.ts`
+可参考现有 Provider 实现：`lib/providers/ai-sdk-check.ts`
 
 如果目标 Provider 也支持「流式响应」，推荐复用 `lib/providers/stream-check.ts`：
 

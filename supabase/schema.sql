@@ -7,7 +7,7 @@
 -- 1. 枚举类型
 -- -----------------------------------------------------------------------------
 
-CREATE TYPE public.provider_type AS ENUM ('openai', 'gemini', 'anthropic');
+CREATE TYPE public.provider_type AS ENUM ('openai', 'openai_chat', 'gemini', 'anthropic');
 
 -- -----------------------------------------------------------------------------
 -- 2. 表结构
@@ -33,7 +33,7 @@ CREATE TABLE public.check_configs (
 COMMENT ON TABLE public.check_configs IS 'AI 服务商配置表';
 COMMENT ON COLUMN public.check_configs.id IS '配置 UUID';
 COMMENT ON COLUMN public.check_configs.name IS '配置显示名称';
-COMMENT ON COLUMN public.check_configs.type IS '提供商类型: openai, gemini, anthropic';
+COMMENT ON COLUMN public.check_configs.type IS '提供商类型: openai, openai_chat, gemini, anthropic';
 COMMENT ON COLUMN public.check_configs.model IS '模型名称，如 gpt-4o-mini';
 COMMENT ON COLUMN public.check_configs.endpoint IS 'API 端点 URL';
 COMMENT ON COLUMN public.check_configs.api_key IS 'API 密钥';
