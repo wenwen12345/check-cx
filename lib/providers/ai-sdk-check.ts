@@ -24,6 +24,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
+import type { LanguageModel } from "ai";
 import type { CheckResult, HealthStatus, ProviderConfig } from "../types";
 import { DEFAULT_ENDPOINTS } from "../types";
 import { generateChallenge, validateResponse } from "./challenge";
@@ -226,7 +227,9 @@ function createCustomFetch(
  * @returns 包含模型实例、推理强度和 API 类型标识的对象
  * @throws 当 Provider 类型不支持时抛出错误
  */
-function createModel(config: ProviderConfig) {
+function createModel(
+  config: ProviderConfig
+): { model: LanguageModel; reasoningEffort: ReasoningEffort | undefined } {
   const endpoint = config.endpoint || DEFAULT_ENDPOINTS[config.type];
   const baseURL = deriveBaseURL(endpoint);
   const { modelId, reasoningEffort } = parseModelDirective(config.model);
@@ -249,7 +252,7 @@ function createModel(config: ProviderConfig) {
 
     case "openai_chat": {
       const provider = createOpenAI({ apiKey: config.apiKey, baseURL, fetch: customFetch });
-      const providerWithChat = provider as unknown as { chat?: (id: string) => unknown };
+      const providerWithChat = provider as unknown as { chat?: (id: string) => LanguageModel };
       if (typeof providerWithChat.chat !== "function") {
         throw new Error(
           "@ai-sdk/openai 未暴露 openai.chat()；AI SDK 5 起默认走 Responses，请升级依赖或改用 openai 渠道"
