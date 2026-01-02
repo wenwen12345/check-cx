@@ -278,7 +278,13 @@ function createModel(config: ProviderConfig) {
         );
       }
       const provider = createOpenAI({ apiKey: config.apiKey, baseURL, fetch: customFetch });
-      return { model: provider(modelId), reasoningEffort: undefined };
+      const chatProvider = (provider as unknown as { chat?: (id: string) => unknown }).chat;
+      if (typeof chatProvider !== "function") {
+        throw new Error(
+          "@ai-sdk/openai 未暴露 openai.chat()；AI SDK 5 起默认走 Responses，请升级依赖或改用 openai 渠道"
+        );
+      }
+      return { model: chatProvider(modelId), reasoningEffort: undefined };
     }
 
     case "anthropic": {

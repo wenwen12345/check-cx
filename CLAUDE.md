@@ -96,7 +96,7 @@ lib/
    - `failed`: 请求失败或超时(默认超时 15 秒)
 5. **三类 Provider**:
    - **OpenAI (Responses)** (`type = openai`): `/v1/responses`
-   - **OpenAI (Chat Completions)** (`type = openai_chat`): `/v1/chat/completions`
+   - **OpenAI (Chat Completions)** (`type = openai_chat`): `/v1/chat/completions`（AI SDK 5 默认走 Responses，需显式使用 chat 模式）
    - **Gemini** (`type = gemini`): 通过 OpenAI 兼容模式接入
    - **Anthropic** (`type = anthropic`): `/v1/messages`
 
