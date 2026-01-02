@@ -64,25 +64,6 @@ function deriveBaseURL(endpoint: string): string {
   return pathWithoutQuery.replace(API_PATH_SUFFIX_REGEX, "");
 }
 
-/**
- * 判断端点是否为 OpenAI Responses API
- *
- * OpenAI 提供两种 API：
- * - Chat Completions API (/v1/chat/completions)：传统对话接口
- * - Responses API (/v1/responses)：新版接口，支持更多功能
- */
-function isResponsesEndpoint(endpoint: string | null | undefined): boolean {
-  if (!endpoint) return false;
-  const [pathWithoutQuery] = endpoint.split("?");
-  return /\/responses\/?$/.test(pathWithoutQuery);
-}
-
-function isChatCompletionsEndpoint(endpoint: string | null | undefined): boolean {
-  if (!endpoint) return false;
-  const [pathWithoutQuery] = endpoint.split("?");
-  return /\/chat\/completions\/?$/.test(pathWithoutQuery);
-}
-
 /* ============================================================================
  * 推理模型支持
  * ============================================================================ */
@@ -259,11 +240,6 @@ function createModel(config: ProviderConfig) {
 
   switch (config.type) {
     case "openai": {
-      if (isChatCompletionsEndpoint(endpoint)) {
-        throw new Error(
-          "openai 渠道仅支持 /v1/responses；检测 Chat Completions 请改用 openai_chat"
-        );
-      }
       const provider = createOpenAI({ apiKey: config.apiKey, baseURL, fetch: customFetch });
       return {
         model: provider.responses(modelId),
@@ -272,19 +248,14 @@ function createModel(config: ProviderConfig) {
     }
 
     case "openai_chat": {
-      if (isResponsesEndpoint(endpoint)) {
-        throw new Error(
-          "openai_chat 渠道仅支持 /v1/chat/completions；检测 Responses 请改用 openai"
-        );
-      }
       const provider = createOpenAI({ apiKey: config.apiKey, baseURL, fetch: customFetch });
-      const chatProvider = (provider as unknown as { chat?: (id: string) => unknown }).chat;
-      if (typeof chatProvider !== "function") {
+      const providerWithChat = provider as unknown as { chat?: (id: string) => unknown };
+      if (typeof providerWithChat.chat !== "function") {
         throw new Error(
           "@ai-sdk/openai 未暴露 openai.chat()；AI SDK 5 起默认走 Responses，请升级依赖或改用 openai 渠道"
         );
       }
-      return { model: chatProvider(modelId), reasoningEffort: undefined };
+      return { model: providerWithChat.chat(modelId), reasoningEffort: undefined };
     }
 
     case "anthropic": {
