@@ -9,13 +9,3 @@ EXCEPTION
   WHEN duplicate_object THEN
     NULL;
 END $$;
-
--- 将历史遗留的 openai + chat/completions 配置迁移到 openai_chat，避免升级后不兼容
-UPDATE public.check_configs
-SET type = 'openai_chat'
-WHERE type = 'openai'
-  AND (
-    endpoint LIKE '%/chat/completions'
-    OR endpoint LIKE '%/chat/completions?%'
-    OR endpoint LIKE '%/chat/completions/%'
-  );
